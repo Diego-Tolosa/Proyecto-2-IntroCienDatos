@@ -59,3 +59,55 @@ El dataset cuenta con más de **18,000 registros**, lo cual lo hace adecuado par
 - Se identifican variables numéricas con outliers, que podrían necesitar tratamiento en la fase de limpieza.
 - El **precio promedio** es una buena variable objetivo para predecir, ya que está disponible en todos los registros y es continua.
 
+# 🧹 Limpieza y Normalización del Dataset – Avocado Prices 🥑
+
+## 📋 Objetivo
+
+La fase de limpieza y normalización tiene como objetivo preparar los datos para su posterior análisis o modelado. Esto incluye corregir inconsistencias, transformar variables y escalar valores numéricos para que estén en un formato adecuado.
+
+---
+
+## ✅ 1. Conversión de Fechas
+
+Se convierte la columna `Date` al tipo de dato datetime y se extraen nuevas columnas útiles como `Year`, `Month` y `Day`.
+
+```python
+df['Date'] = pd.to_datetime(df['Date'])
+df['Year'] = df['Date'].dt.year
+df['Month'] = df['Date'].dt.month
+df['Day'] = df['Date'].dt.day
+
+# Eliminacion de Columnas Innecesarias
+df = df.drop(columns=['Unnamed: 0'], errors='ignore')
+
+# Verificación y Tratamiento de Valores Nulos
+df.isnull().sum()
+
+#Manejo de Outliers (opcional)
+q1 = df['AveragePrice'].quantile(0.25)
+q3 = df['AveragePrice'].quantile(0.75)
+iqr = q3 - q1
+
+lim_inf = q1 - 1.5 * iqr
+lim_sup = q3 + 1.5 * iqr
+
+df = df[(df['AveragePrice'] >= lim_inf) & (df['AveragePrice'] <= lim_sup)]
+
+# Codificación de Variables Categóricas
+df_encoded = pd.get_dummies(df, columns=['type', 'region'], drop_first=True)
+
+# Normalización de Variables Numéricas
+from sklearn.preprocessing import StandardScaler
+
+scaler = StandardScaler()
+cols_to_scale = ['AveragePrice', 'Total Volume', '4046', '4225', '4770']
+df_encoded[cols_to_scale] = scaler.fit_transform(df_encoded[cols_to_scale])
+```
+
+## 📦 Resultado Final
+El dataset ha sido limpiado y transformado con las siguientes características:
+- Sin valores nulos.
+- Fechas en formato datetime.
+- Outliers opcionalmente eliminados.
+- Variables categóricas codificadas.
+- Variables numéricas escaladas.
